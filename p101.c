@@ -1,0 +1,108 @@
+#include <stdio.h> 
+#include <stdlib.h>
+#include <stdint.h>
+#include <math.h>
+
+#define swap(a, b, type) do{type tmp; tmp = a; a = b; b = a;}while(0); 
+#define aritm(a, cr, op) do{a = fasi(iasf(a) op iasf(cr));}while(0);
+
+#define REG_I0 0
+#define REG_I1 1
+#define REG_M 2
+#define REG_A 3
+#define REG_R 4
+#define REG_B 5
+#define REG_b 6
+#define REG_C 7
+#define REG_c 8
+#define REG_D 9
+#define REG_d 10
+#define REG_E 11
+#define REG_e 12
+#define REG_F 13
+#define REG_f 14
+
+enum OP_CODE {
+    OP_PLUS,
+    OP_MIN,
+    OP_MUL,
+    OP_DIV,
+    OP_SQRT,
+    OP_ABS,
+    OP_TRANSFM,
+    OP_TRANSIA,
+    OP_EXCIA,
+    OP_DECA,
+    OP_CLEAR,
+    OP_PRINT,
+    OP_VSPACE,
+    OP_STOP,
+    OP_DREXC
+};
+
+static
+uint32_t fasi(float f)
+{
+    union {
+        float f;
+        uint32_t u; 
+    } fu = { .f = f };
+    return fu.u;
+}
+
+static
+float iasf(uint32_t i)
+{
+    union {
+        float f;
+        uint32_t u; 
+    } fu = { .u = i };
+    return fu.f;
+}
+
+struct P101 {
+    uint32_t registers[15];
+    uint32_t curr_reg;
+    int running;
+};
+
+static
+void num(struct P101* p, float n)
+{
+    uint32_t u = fasi(n);
+    p->registers[REG_M] = u;
+}
+
+static
+void dispatch(struct P101* p, enum OP_CODE op)
+{
+    switch (op) {
+        case OP_PLUS: aritm(p->registers[REG_A], p->registers[p->curr_reg], +); break;
+        case OP_MIN: aritm(p->registers[REG_A], p->registers[p->curr_reg], -); break;
+        case OP_MUL: aritm(p->registers[REG_A], p->registers[p->curr_reg], *); break;
+        case OP_DIV: aritm(p->registers[REG_A], p->registers[p->curr_reg], /); break;
+        case OP_CLEAR: p->registers[p->curr_reg] = 0; break;
+        case OP_TRANSIA: p->registers[REG_A] = p->registers[p->curr_reg]; break;
+        case OP_TRANSFM: p->registers[p->curr_reg] = p->registers[REG_M]; break;
+        case OP_EXCIA: swap(p->registers[REG_A], p->registers[p->curr_reg], float); break;
+        case OP_PRINT: printf("PRINT: %f\n", iasf(p->registers[p->curr_reg])); break;
+        case OP_SQRT: p->registers[REG_A] = fasi(sqrt(iasf(p->registers[p->curr_reg]))); break;
+        case OP_ABS: p->registers[REG_A] = fasi(abs(iasf(p->registers[p->curr_reg]))); break;
+        case OP_VSPACE: printf("\n"); break;
+        case OP_DECA: p->registers[REG_M] = fasi(iasf(p->registers[REG_A]) - iasf(fasi(abs(p->registers[REG_A])))); break;
+    }
+    p->curr_reg = REG_M;
+}
+
+int main(void)
+{
+    struct P101 p;
+    p.curr_reg = REG_M;
+    num(&p, 10);
+    dispatch(&p, OP_TRANSIA);
+    num(&p, 10);
+    dispatch(&p, OP_PLUS);
+    p.curr_reg = REG_A;
+    dispatch(&p, OP_PRINT);
+    return 0;
+}
