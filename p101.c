@@ -67,7 +67,7 @@ struct P101 {
 };
 
 static
-void num(struct P101* p, float n)
+void ins(struct P101* p, float n)
 {
     uint32_t u = fasi(n);
     p->registers[REG_M] = u;
@@ -98,10 +98,17 @@ int main(void)
 {
     struct P101 p;
     p.curr_reg = REG_M;
-    num(&p, 10);
+    ins(&p, 10);
     dispatch(&p, OP_TRANSIA);
-    num(&p, 10);
-    dispatch(&p, OP_PLUS);
+    ins(&p, 10);
+    dispatch(&p, OP_MUL);
+    p.curr_reg = REG_A;
+    dispatch(&p, OP_PRINT);
+    p.curr_reg = REG_F;
+    ins(&p, 100.0);
+    dispatch(&p, OP_TRANSFM);
+    p.curr_reg = REG_F;
+    dispatch(&p, OP_SQRT);
     p.curr_reg = REG_A;
     dispatch(&p, OP_PRINT);
     return 0;
