@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
+#include <assert.h>
 
 #define swap(a, b, type) do{type tmp; tmp = a; a = b; b = a;}while(0); 
 #define aritm(a, cr, op) do{a = fasi(iasf(a) op iasf(cr));}while(0);
@@ -62,7 +63,7 @@ float iasf(uint32_t i)
 
 struct P101 {
     uint32_t registers[15];
-    uint32_t curr_reg;
+    uint32_t CR;
     int running;
 };
 
@@ -77,39 +78,82 @@ static
 void dispatch(struct P101* p, enum OP_CODE op)
 {
     switch (op) {
-        case OP_PLUS: aritm(p->registers[REG_A], p->registers[p->curr_reg], +); break;
-        case OP_MIN: aritm(p->registers[REG_A], p->registers[p->curr_reg], -); break;
-        case OP_MUL: aritm(p->registers[REG_A], p->registers[p->curr_reg], *); break;
-        case OP_DIV: aritm(p->registers[REG_A], p->registers[p->curr_reg], /); break;
-        case OP_CLEAR: p->registers[p->curr_reg] = 0; break;
-        case OP_TRANSIA: p->registers[REG_A] = p->registers[p->curr_reg]; break;
-        case OP_TRANSFM: p->registers[p->curr_reg] = p->registers[REG_M]; break;
-        case OP_EXCIA: swap(p->registers[REG_A], p->registers[p->curr_reg], float); break;
-        case OP_PRINT: printf("PRINT: %f\n", iasf(p->registers[p->curr_reg])); break;
-        case OP_SQRT: p->registers[REG_A] = fasi(sqrt(iasf(p->registers[p->curr_reg]))); break;
-        case OP_ABS: p->registers[REG_A] = fasi(abs(iasf(p->registers[p->curr_reg]))); break;
+        case OP_PLUS: aritm(p->registers[REG_A], p->registers[p->CR], +); break;
+        case OP_MIN: aritm(p->registers[REG_A], p->registers[p->CR], -); break;
+        case OP_MUL: aritm(p->registers[REG_A], p->registers[p->CR], *); break;
+        case OP_DIV: aritm(p->registers[REG_A], p->registers[p->CR], /); break;
+        case OP_CLEAR: p->registers[p->CR] = 0; break;
+        case OP_TRANSIA: p->registers[REG_A] = p->registers[p->CR]; break;
+        case OP_TRANSFM: p->registers[p->CR] = p->registers[REG_M]; break;
+        case OP_EXCIA: swap(p->registers[REG_A], p->registers[p->CR], float); break;
+        case OP_PRINT: printf("PRINT: %f\n", iasf(p->registers[p->CR])); break;
+        case OP_SQRT: p->registers[REG_A] = fasi(sqrt(iasf(p->registers[p->CR]))); break;
+        case OP_ABS: p->registers[REG_A] = fasi(abs(iasf(p->registers[p->CR]))); break;
         case OP_VSPACE: printf("\n"); break;
         case OP_DECA: p->registers[REG_M] = fasi(iasf(p->registers[REG_A]) - iasf(fasi(abs(p->registers[REG_A])))); break;
     }
-    p->curr_reg = REG_M;
+    p->CR = REG_M;
 }
 
-int main(void)
+static
+void init_p101(struct P101* p)
+{
+    p->CR = REG_M;
+}
+
+static
+void test_plus()
 {
     struct P101 p;
-    p.curr_reg = REG_M;
+    init_p101(&p);
+    ins(&p, 10);
+    dispatch(&p, OP_TRANSIA);
+    ins(&p, 10);
+    dispatch(&p, OP_PLUS);
+    assert(p.registers[REG_A] == fasi(20.0) && "Addition is broken");
+}
+
+static
+void test_minus()
+{
+    struct P101 p;
+    init_p101(&p);
+    ins(&p, 10);
+    dispatch(&p, OP_TRANSIA);
+    ins(&p, 10);
+    dispatch(&p, OP_MIN);
+    assert(p.registers[REG_A] == 0 && "Subtraction is broken");
+}
+
+static
+void test_mul()
+{
+    struct P101 p;
+    init_p101(&p);
     ins(&p, 10);
     dispatch(&p, OP_TRANSIA);
     ins(&p, 10);
     dispatch(&p, OP_MUL);
-    p.curr_reg = REG_A;
-    dispatch(&p, OP_PRINT);
-    p.curr_reg = REG_F;
-    ins(&p, 100.0);
-    dispatch(&p, OP_TRANSFM);
-    p.curr_reg = REG_F;
-    dispatch(&p, OP_SQRT);
-    p.curr_reg = REG_A;
-    dispatch(&p, OP_PRINT);
+    assert(p.registers[REG_A] == fasi(100.0) && "Multiplication is broken");
+}
+
+static
+void test_div()
+{
+    struct P101 p;
+    init_p101(&p);
+    ins(&p, 10);
+    dispatch(&p, OP_TRANSIA);
+    ins(&p, 10);
+    dispatch(&p, OP_DIV);
+    assert(p.registers[REG_A] == fasi(1.0) && "Division is broken");
+}
+
+int main(void)
+{
+    test_plus();
+    test_minus();
+    test_mul();
+    test_div();
     return 0;
 }
