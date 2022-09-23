@@ -101,59 +101,7 @@ void init_p101(struct P101* p)
     p->CR = REG_M;
 }
 
-static
-void test_plus()
-{
-    struct P101 p;
-    init_p101(&p);
-    ins(&p, 10);
-    dispatch(&p, OP_TRANSIA);
-    ins(&p, 10);
-    dispatch(&p, OP_PLUS);
-    assert(p.registers[REG_A] == fasi(20.0) && "Addition is broken");
-}
-
-static
-void test_minus()
-{
-    struct P101 p;
-    init_p101(&p);
-    ins(&p, 10);
-    dispatch(&p, OP_TRANSIA);
-    ins(&p, 10);
-    dispatch(&p, OP_MIN);
-    assert(p.registers[REG_A] == 0 && "Subtraction is broken");
-}
-
-static
-void test_mul()
-{
-    struct P101 p;
-    init_p101(&p);
-    ins(&p, 10);
-    dispatch(&p, OP_TRANSIA);
-    ins(&p, 10);
-    dispatch(&p, OP_MUL);
-    assert(p.registers[REG_A] == fasi(100.0) && "Multiplication is broken");
-}
-
-static
-void test_div()
-{
-    struct P101 p;
-    init_p101(&p);
-    ins(&p, 10);
-    dispatch(&p, OP_TRANSIA);
-    ins(&p, 10);
-    dispatch(&p, OP_DIV);
-    assert(p.registers[REG_A] == fasi(1.0) && "Division is broken");
-}
-
 int main(void)
 {
-    test_plus();
-    test_minus();
-    test_mul();
-    test_div();
     return 0;
 }
